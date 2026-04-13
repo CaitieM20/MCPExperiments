@@ -318,3 +318,19 @@ interface GetTaskResult extends Result
     [key: string]?: unknown;
 }
 ```
+
+### ResultType
+We propose the addition of the `task` ResultType to indicate that a Response contains a Task object. For example in the `tools/call` method can return a `ToolCallResult` an `IncompleteRequest` or a `Task` now. 
+
+```typescript
+type ResultType = "complete" | "incomplete" | "task"
+```
+
+While not strictly necessary for `task/get`, using the `task` ResultType can help standardize the handling of responses that contain Task objects across different methods.
+
+## Headers 
+[SEP-2243](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2243) introduces standard headers in the Streamable HTTP Transport to facilitate more efficient routing. Routing on TaskId is also desirable since there is often state associated with a specific Task that needs to be consistently routed to the same server instance.
+
+For Tasks the following Headers MUST be set by the client when making requests over the Streamable HTTP Transport:
+- `Mcp-Method`: `tasks/get`, `tasks/cancel`
+- `Mcp-Name`: should contain the `taskId` of the Task being requested or cancelled.
