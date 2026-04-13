@@ -4,6 +4,8 @@ Below is a mock up of the new Tasks workflow. It simplifies the existing one by 
 TODO & OpenQuestions:
 - Do we need a specific error code if the client is polling too frequently? 
 - In the Error Case this is very Tool Specific, do we need generic error handling here?
+- This will work with request/response, can also work with streaming. How do we make the mode more explicit?
+
 
 ## Tool Call & Task Creation
 1. The client calls a Tool. The Server determines if a Task is created for this request. 
@@ -276,3 +278,43 @@ for #2, client never sends the `InputResponses`. The Servers SHOULD leverage `Ta
 
 for #3, the client MAY durably store in progress `Tasks` and resume polling `tasks/get` after restart. The Server SHOULD just return the current state of the `Task` without any changes until the client provides the requested input or the `Task` ttl expires.
 
+## Task Schema
+The `Task` schema defines the Task metadata and remains unchanged.
+
+### Client Requests for `task/get`
+```typescript
+interface GetTaskRequest extends JSONRPCRequest {
+    method "tasks/get";
+    params: {
+    /**
+     * The task identifier to query.
+     */
+    taskId: string;
+    /**
+     * Optional field to allow the client to respond to a server's request for more information 
+     * when the task is in `input_required` state.
+     */
+    inputResponses?: InputResponses;
+  };
+}
+```
+
+### Server Response for `task/get`
+```typescript
+interface GetTaskResult extends Result
+{
+    /**
+     * Required field containing the Task Metadata Object.
+     */
+    task: Task;
+    /**
+     * Optional field containing the InputRequests that specify the additional information needed from the client.
+     * Should only be sent when the task is in the `input_required` state.
+     */
+    inputRequests?: InputRequests;
+    /**
+     * Optional field containing the Result of a Task if its in the `completed` state.
+     */
+    [key: string]?: unknown;
+}
+```
